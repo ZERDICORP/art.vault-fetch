@@ -19,7 +19,7 @@ jobs:
           rm test-file.txt
 
       - name: Fetch artifact from Art.Vault
-        uses: .
+        uses: ./
         with:
           vault-secret: ${{ secrets.VAULT_SECRET }}
           project-name: art.vault-fetch
