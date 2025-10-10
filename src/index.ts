@@ -54,16 +54,16 @@ export async function run() {
         resolve(void 0);
       });
 
-      fileStream.on('error', (error) => {
+      fileStream.on('error', (error: Error) => {
         reject(new Error(`[Art.Vault]: Failed to save file: ${error.message}`));
       });
 
-      response.body.on('error', (error) => {
+      response.body.on('error', (error: Error) => {
         reject(new Error(`[Art.Vault]: Failed to download file: ${error.message}`));
       });
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     setFailed((error as Error)?.message ?? "Unknown error");
   }
 }
