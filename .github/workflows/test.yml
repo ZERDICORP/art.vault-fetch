@@ -3,7 +3,6 @@ name: "Test Art.Vault Fetch"
 on:
   push:
     branches: [ master ]
-  workflow_dispatch:
 
 jobs:
   test-upload-and-fetch:
