@@ -1,0 +1,25 @@
+name: "Fetch artifact from Art.Vault"
+description: "Fetch your artifact from 'Art.Vault' — a lightweight temporary storage for CI/CD artifacts built on Telegram."
+author: "Nikolay Anikin"
+
+inputs:
+  vault-secret:
+    description: 'Secret token for your Vault channel.'
+    required: true
+  project-name:
+    description: 'Name of your project (used for grouping artifacts).'
+    required: true
+  artifact-name:
+    description: 'Name of the artifact to download.'
+    required: true
+  output-path:
+    description: 'Directory path where to save the downloaded file.'
+    required: true
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
+
+branding:
+  icon: 'download'
+  color: 'blue'

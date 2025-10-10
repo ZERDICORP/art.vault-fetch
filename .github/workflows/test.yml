@@ -1,0 +1,43 @@
+name: "Test Art.Vault Fetch"
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test-upload-and-fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Post artifact
+        run: |
+          echo "Hello, world!" > test-file.txt
+          curl -X POST "https://art-vault.nanikin.ru/art.vault-fetch/test-artifact" \
+            -H "Vault-Secret: ${{ secrets.VAULT_SECRET }}" \
+            -F "file=@test-file.txt"
+          rm test-file.txt
+
+      - name: Fetch artifact from Art.Vault
+        uses: .
+        with:
+          vault-secret: ${{ secrets.VAULT_SECRET }}
+          project-name: art.vault-fetch
+          artifact-name: test-artifact
+          output-path: .
+
+      - name: Verify downloaded file
+        run: |
+          if [ -f "./test-artifact" ]; then
+            echo "✅ File downloaded successfully!"
+            if grep -q "Hello, world!" ./test-artifact; then
+              echo "✅ File contains expected content! Test passed!"
+            else
+              echo "❌ File doesn't contain expected content! Test failed!"
+              exit 1
+            fi
+          else
+            echo "❌ File not found!"
+            exit 1
+          fi
