@@ -31569,7 +31569,7 @@ async function run() {
             (0, fs_1.mkdirSync)(outputPath, { recursive: true });
         }
         const filePath = (0, path_1.join)(outputPath, artifactName);
-        (0, core_1.info)(`[Art.Vault]: Fetching artifact '${projectName}.${artifactName}'`);
+        (0, core_1.info)(`[Art.Vault]: Fetching artifact '${projectName}/${artifactName}'`);
         const url = `https://art-vault.nanikin.ru/${projectName}/${artifactName}`;
         const response = await fetch(url, {
             method: "GET",
