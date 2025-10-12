@@ -1,14 +1,16 @@
 import { getInput, setFailed, info } from "@actions/core";
 const fetch = require("node-fetch");
 import { createWriteStream, existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import { join, basename, extname } from "path";
+import { execSync } from "child_process";
 
 export async function run() {
   try {
     const vaultSecret = getInput("vault-secret");
     const projectName = getInput("project-name");
-    const artifactName = getInput("artifact-name");
+    let artifactName = getInput("artifact-name");
     const outputPath = getInput("output-path");
+    const autoUnzip = getInput("auto-unzip").toLowerCase() === "true";
 
     if (!vaultSecret) {
       throw new Error("vault-secret is required");
@@ -21,6 +23,12 @@ export async function run() {
     }
     if (!outputPath) {
       throw new Error("output-path is required");
+    }
+
+    // Auto-add .zip extension if auto-unzip is enabled but artifact name doesn't have .zip
+    if (autoUnzip && extname(artifactName).toLowerCase() !== '.zip') {
+      artifactName += '.zip';
+      info(`[Art.Vault]: Auto-unzip enabled, adding .zip extension: '${artifactName}'`);
     }
 
     if (!existsSync(outputPath)) {
@@ -49,8 +57,30 @@ export async function run() {
     response.body.pipe(fileStream);
 
     return new Promise((resolve, reject) => {
-      fileStream.on('finish', () => {
+      fileStream.on('finish', async () => {
         info(`[Art.Vault]: File downloaded successfully to '${filePath}'`);
+
+        // Auto-unzip functionality
+        if (autoUnzip && extname(artifactName).toLowerCase() === '.zip') {
+          try {
+            const baseFileName = basename(artifactName, '.zip');
+            const extractPath = join(outputPath, baseFileName);
+
+            if (!existsSync(extractPath)) {
+              mkdirSync(extractPath, { recursive: true });
+            }
+
+            info(`[Art.Vault]: Extracting zip file to '${extractPath}'`);
+
+            execSync(`unzip -o "${filePath}" -d "${extractPath}"`, { stdio: 'inherit' });
+
+            info(`[Art.Vault]: File extracted successfully to '${extractPath}'`);
+          } catch (extractError) {
+            reject(new Error(`[Art.Vault]: Failed to extract zip file: ${(extractError as Error).message}`));
+            return;
+          }
+        }
+
         resolve(void 0);
       });
 

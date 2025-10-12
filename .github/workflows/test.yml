@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  test-upload:
+  test-file-upload:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,13 +16,13 @@ jobs:
 
       - name: Upload to Art.Vault using POST
         run: |
-          curl -X POST "https://art-vault.nanikin.ru/art.vault-post" \
+          curl -X POST "https://art-vault.nanikin.ru/art.vault-fetch" \
             -H "Vault-Secret: ${{ secrets.VAULT_SECRET }}" \
             -F "file=@test-file.txt"
 
-  test-download:
+  test-file-download:
     runs-on: ubuntu-latest
-    needs: test-upload
+    needs: test-file-upload
     steps:
       - uses: actions/checkout@v3
 
@@ -30,15 +30,15 @@ jobs:
         uses: ./
         with:
           vault-secret: ${{ secrets.VAULT_SECRET }}
-          project-name: art.vault-post
+          project-name: art.vault-fetch
           artifact-name: test-file.txt
-          output-path: ./
+          output-path: ./downloads
 
       - name: Verify downloaded file
         run: |
-          if [ -f "./test-file.txt" ]; then
+          if [ -f "./downloads/test-file.txt" ]; then
             echo "✅ File downloaded successfully!"
-            if grep -q "Hello, world!" ./test-file.txt; then
+            if grep -q "Hello, world!" ./downloads/test-file.txt; then
               echo "✅ File contains expected content! Test passed!"
             else
               echo "❌ File doesn't contain expected content! Test failed!"
@@ -46,5 +46,78 @@ jobs:
             fi
           else
             echo "❌ File not found!"
+            exit 1
+          fi
+
+  test-directory-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create test directory
+        run: |
+          mkdir -p test-directory/subfolder
+          echo "Main file content" > test-directory/main.txt
+          echo "Sub file content" > test-directory/subfolder/sub.txt
+          echo "Config data" > test-directory/config.json
+
+      - name: Create zip archive
+        run: |
+          cd test-directory && zip -r ../test-archive.zip . && cd ..
+
+      - name: Upload directory to Art.Vault using POST
+        run: |
+          curl -X POST "https://art-vault.nanikin.ru/art.vault-fetch" \
+            -H "Vault-Secret: ${{ secrets.VAULT_SECRET }}" \
+            -F "file=@test-archive.zip"
+
+  test-directory-download:
+    runs-on: ubuntu-latest
+    needs: test-directory-upload
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download and auto-unzip artifact
+        uses: ./
+        with:
+          vault-secret: ${{ secrets.VAULT_SECRET }}
+          project-name: art.vault-fetch
+          artifact-name: test-archive.zip
+          auto-unzip: true
+          output-path: ./extracted
+
+      - name: Verify extracted files
+        run: |
+          if [ -f "./extracted/test-archive/main.txt" ] && [ -f "./extracted/test-archive/subfolder/sub.txt" ] && [ -f "./extracted/test-archive/config.json" ]; then
+            echo "✅ Directory extracted successfully!"
+          
+            if grep -q "Main file content" ./extracted/test-archive/main.txt; then
+              echo "✅ Main file contains expected content!"
+            else
+              echo "❌ Main file doesn't contain expected content!"
+              exit 1
+            fi
+          
+            if grep -q "Sub file content" ./extracted/test-archive/subfolder/sub.txt; then
+              echo "✅ Sub file contains expected content!"
+            else
+              echo "❌ Sub file doesn't contain expected content!"
+              exit 1
+            fi
+          
+            if grep -q "Config data" ./extracted/test-archive/config.json; then
+              echo "✅ Config file contains expected content! Test passed!"
+            else
+              echo "❌ Config file doesn't contain expected content!"
+              exit 1
+            fi
+          else
+            echo "❌ Extracted files not found!"
+            echo "Contents of ./extracted/:"
+            ls -la ./extracted/ || echo "Directory doesn't exist"
+            if [ -d "./extracted/test-archive" ]; then
+              echo "Contents of ./extracted/test-archive/:"
+              ls -la ./extracted/test-archive/
+            fi
             exit 1
           fi

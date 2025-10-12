@@ -15,6 +15,10 @@ inputs:
   output-path:
     description: 'Directory path where to save the downloaded file.'
     required: true
+  auto-unzip:
+    description: 'Automatically extract zip files to a folder with the same name (without .zip extension).'
+    required: false
+    default: 'false'
 
 runs:
   using: "node20"
