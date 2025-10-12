@@ -31547,12 +31547,14 @@ const core_1 = __nccwpck_require__(7484);
 const fetch = __nccwpck_require__(6705);
 const fs_1 = __nccwpck_require__(9896);
 const path_1 = __nccwpck_require__(6928);
+const child_process_1 = __nccwpck_require__(5317);
 async function run() {
     try {
         const vaultSecret = (0, core_1.getInput)("vault-secret");
         const projectName = (0, core_1.getInput)("project-name");
-        const artifactName = (0, core_1.getInput)("artifact-name");
+        let artifactName = (0, core_1.getInput)("artifact-name");
         const outputPath = (0, core_1.getInput)("output-path");
+        const autoUnzip = (0, core_1.getInput)("auto-unzip").toLowerCase() === "true";
         if (!vaultSecret) {
             throw new Error("vault-secret is required");
         }
@@ -31564,6 +31566,11 @@ async function run() {
         }
         if (!outputPath) {
             throw new Error("output-path is required");
+        }
+        // Auto-add .zip extension if auto-unzip is enabled but artifact name doesn't have .zip
+        if (autoUnzip && (0, path_1.extname)(artifactName).toLowerCase() !== '.zip') {
+            artifactName += '.zip';
+            (0, core_1.info)(`[Art.Vault]: Auto-unzip enabled, adding .zip extension: '${artifactName}'`);
         }
         if (!(0, fs_1.existsSync)(outputPath)) {
             (0, fs_1.mkdirSync)(outputPath, { recursive: true });
@@ -31584,8 +31591,25 @@ async function run() {
         const fileStream = (0, fs_1.createWriteStream)(filePath);
         response.body.pipe(fileStream);
         return new Promise((resolve, reject) => {
-            fileStream.on('finish', () => {
+            fileStream.on('finish', async () => {
                 (0, core_1.info)(`[Art.Vault]: File downloaded successfully to '${filePath}'`);
+                // Auto-unzip functionality
+                if (autoUnzip && (0, path_1.extname)(artifactName).toLowerCase() === '.zip') {
+                    try {
+                        const baseFileName = (0, path_1.basename)(artifactName, '.zip');
+                        const extractPath = (0, path_1.join)(outputPath, baseFileName);
+                        if (!(0, fs_1.existsSync)(extractPath)) {
+                            (0, fs_1.mkdirSync)(extractPath, { recursive: true });
+                        }
+                        (0, core_1.info)(`[Art.Vault]: Extracting zip file to '${extractPath}'`);
+                        (0, child_process_1.execSync)(`unzip -o "${filePath}" -d "${extractPath}"`, { stdio: 'inherit' });
+                        (0, core_1.info)(`[Art.Vault]: File extracted successfully to '${extractPath}'`);
+                    }
+                    catch (extractError) {
+                        reject(new Error(`[Art.Vault]: Failed to extract zip file: ${extractError.message}`));
+                        return;
+                    }
+                }
                 resolve(void 0);
             });
             fileStream.on('error', (error) => {
