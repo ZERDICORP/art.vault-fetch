@@ -1,4 +1,4 @@
-name: "Test Art.Vault Upload"
+name: "Test Art.Vault Fetch"
 
 on:
   push:
