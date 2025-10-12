@@ -29,7 +29,7 @@ export async function run() {
 
     const filePath = join(outputPath, artifactName);
 
-    info(`[Art.Vault]: Fetching artifact '${projectName}.${artifactName}'`);
+    info(`[Art.Vault]: Fetching artifact '${projectName}/${artifactName}'`);
 
     const url = `https://art-vault.nanikin.ru/${projectName}/${artifactName}`;
 

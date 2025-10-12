@@ -20,6 +20,6 @@ artifacts built on Telegram.
   with:
     vault-secret: ${{ secrets.ART_VAULT_SECRET }}
     project-name: my-service
-    artifact-name: main-build.zip
+    artifact-name: build.zip
     output-path: .
 ```
