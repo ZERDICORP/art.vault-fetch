@@ -19,7 +19,7 @@ artifacts built on Telegram.
 
 ```yaml
 - name: Fetch artifact from Art.Vault
-  uses: zerdicorp/art.vault-fetch@v1
+  uses: zerdicorp/art.vault-fetch@v2
   with:
     vault-secret: ${{ secrets.ART_VAULT_SECRET }}
     project-name: my-service
@@ -30,8 +30,8 @@ artifacts built on Telegram.
 #### - Download and auto-extract zip
 
 ```yaml
-- name: Fetch and extract artifact from Art.Vault
-  uses: zerdicorp/art.vault-fetch@v1
+- name: Fetch artifact from Art.Vault
+  uses: zerdicorp/art.vault-fetch@v2
   with:
     vault-secret: ${{ secrets.ART_VAULT_SECRET }}
     project-name: my-service
