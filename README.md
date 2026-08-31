@@ -39,3 +39,5 @@ artifacts built on Telegram.
     auto-unzip: true
     output-path: ./downloads // will be extracted to ./downloads/build/
 ```
+
+<!-- Security scan triggered at 2026-08-31 16:58:42 -->
